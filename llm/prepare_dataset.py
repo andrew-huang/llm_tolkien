@@ -6,7 +6,7 @@ from typing import Callable, Mapping
 from datasets import Dataset
 from transformers import AutoTokenizer, PreTrainedTokenizer
 
-from llm import config
+# from llm import config
 
 
 LOGGER = logging.getLogger(__name__)
@@ -70,13 +70,13 @@ def tokenize(element: Mapping, tokenizer: Callable, context_length: int) -> str:
     return {"input_ids": inputs_batch}
 
 
-if __name__ == '__main__':
+# if __name__ == '__main__':
 
-    prepare_dataset(
-        dataset_path=config.extraction_path, 
-        min_length=config.min_length,
-        context_length=config.context_length,
-        test_size=config.test_size,
-        shuffle=config.shuffle,
-        hf_repo=config.hf_repo
-    )
+#     prepare_dataset(
+#         dataset_path=config.extraction_path, 
+#         min_length=config.min_length,
+#         context_length=config.context_length,
+#         test_size=config.test_size,
+#         shuffle=config.shuffle,
+#         hf_repo=config.hf_repo
+#     )
