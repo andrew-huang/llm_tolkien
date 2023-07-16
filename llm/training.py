@@ -31,7 +31,7 @@ class LLMTolkien():
             mlm: bool,
         ) -> None:
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
-        model = AutoModelForCausalLM.from_pretrained(self.model_name, device_map="auto", load_in_8bit=True)
+        model = AutoModelForCausalLM.from_pretrained(self.model_name, device_map="auto", load_in_8bit=True,  trust_remote_code=True)
         model = prepare_model(model)
         model = get_peft_model(model, LoraConfig(**lora_config))
         LOGGER.info(f"Model trainable parameters:\n {print_trainable_parameters(model)}")
