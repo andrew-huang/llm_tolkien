@@ -17,6 +17,7 @@ min_length = 100
 # HF repo
 # hf_repo = "JeremyArancio/llm-tolkien"
 hf_repo = "eturok/llm-tolkien"
+hf_book_repo = "eturok/lotr-book"
 
 # Dataset
 context_length = 2048
