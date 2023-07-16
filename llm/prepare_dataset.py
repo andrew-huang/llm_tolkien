@@ -14,10 +14,10 @@ logging.basicConfig(level=logging.INFO)
 
 
 def prepare_dataset(dataset_path: Path, min_length: int, context_length: int, 
-                    test_size: float, shuffle: bool, hf_repo: str) -> None:
+                    test_size: float, shuffle: bool, hf_repo: str, model_name: str) -> None:
     """Prepare dataset for training and push it to the hub.
     """
-    tokenizer =  AutoTokenizer.from_pretrained(config.model_name)
+    tokenizer =  AutoTokenizer.from_pretrained(model_name)
     LOGGER.info(f'Start preparing dataset from {dataset_path}')
     text = preprocess_data(dataset_path=dataset_path, min_length=min_length, tokenizer=tokenizer)
     dataset = Dataset.from_dict({'text': [text]})
@@ -78,5 +78,6 @@ def tokenize(element: Mapping, tokenizer: Callable, context_length: int) -> str:
 #         context_length=config.context_length,
 #         test_size=config.test_size,
 #         shuffle=config.shuffle,
-#         hf_repo=config.hf_repo
+#         hf_repo=config.hf_repo,
+#         model_name=config.model_name
 #     )
