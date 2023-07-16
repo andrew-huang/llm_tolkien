@@ -15,7 +15,7 @@ def prepare_model(model):
         param.data = param.data.to(float32)
     # model.gradient_checkpointing_enable()  # reduce number of stored activations
     model.enable_input_require_grads()
-    model.lm_head = CastOutputToFloat(model.lm_head)
+    # model.lm_head = CastOutputToFloat(model.lm_head)
     return model
 
 
