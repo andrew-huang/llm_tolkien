@@ -10,7 +10,7 @@ import pdfplumber
 from pdfplumber.page import Page
 from pdfplumber.pdf import PDF
 
-from llm import config
+# from llm import config
 
 
 logging.basicConfig(level=logging.INFO)
@@ -66,10 +66,10 @@ def extract_text_from_pdf(pdf: PDF, start_page: int, end_page: int,
             page.flush_cache()
 
 
-if __name__ == "__main__":
-    extract(url=config.url, 
-            start_page=config.start_page, 
-            end_page=config.end_page, 
-            header_height=config.header_height, 
-            footer_height=config.footer_height,
-            extraction_path=config.extraction_path)
+# if __name__ == "__main__":
+    # extract(url=config.url, 
+    #         start_page=config.start_page, 
+    #         end_page=config.end_page, 
+    #         header_height=config.header_height, 
+    #         footer_height=config.footer_height,
+    #         extraction_path=config.extraction_path)
