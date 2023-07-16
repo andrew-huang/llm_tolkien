@@ -4,11 +4,11 @@ import argparse
 from typing import Mapping, Any
 
 from torch import cuda
-from datasets import load_dataset
+from datasets import load_dataset, load_from_disk
 from peft import LoraConfig, PeftModel, PeftConfig, get_peft_model
-from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling
+from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments, DataCollatorForLanguageModeling, pipeline
 
-# import config
+# import llm.config as config
 from llm.training_utils import prepare_model, print_trainable_parameters, compute_perplexity
 
 
@@ -27,6 +27,7 @@ class LLMTolkien():
             hf_repo: str, 
             lora_config: Mapping[str, Any],
             trainer_config: Mapping[str, Any],
+            push_to_hub: str,
             mlm: bool,
         ) -> None:
         tokenizer = AutoTokenizer.from_pretrained(self.model_name)
@@ -35,19 +36,25 @@ class LLMTolkien():
         model = get_peft_model(model, LoraConfig(**lora_config))
         LOGGER.info(f"Model trainable parameters:\n {print_trainable_parameters(model)}")
         dataset = load_dataset(hf_repo)
+        # dataset = load_from_disk("dataset.hf")
         LOGGER.info(f"Train dataset downloaded:\n {dataset['train']}")
         LOGGER.info(f"Number of tokens for the training: {dataset['train'].num_rows*len(dataset['train']['input_ids'][0])}")
         trainer = Trainer(
             model=model,
             train_dataset=dataset['train'],
             args=TrainingArguments(**trainer_config),
-            data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=mlm)
+            data_collator=DataCollatorForLanguageModeling(tokenizer, mlm=mlm),
         )
         model.config.use_cache = False  # silence warnings
         trainer.train()
         model.config.use_cache = True
-        model.push_to_hub(repo_id=hf_repo)
-        tokenizer.push_to_hub(repo_id=hf_repo)
+        if push_to_hub:
+            model.push_to_hub(repo_id=hf_repo)
+            tokenizer.push_to_hub(repo_id=hf_repo)
+            
+        if trainer_config['report_to'] == 'wandb':
+            import wandb
+            wandb.finish()
 
     def evaluate():
         pass
@@ -62,40 +69,41 @@ class LLMTolkien():
 
         # Generate text
         inputs = tokenizer(prompt, return_tensors="pt")
+        
         tokens = self.model.generate(
             **inputs,
             max_new_tokens=max_new_tokens,
             temperature=temperature,
             do_sample=do_sample,
         )
-        print(tokenizer.decode(tokens[0]))
+        return tokenizer.decode(tokens[0])
 
 
 # if __name__ == "__main__":
 
-    # parser = argparse.ArgumentParser(description="Train an LLM with Lora.")
-    # parser.add_argument("--model-name", type=str, default=config.model_name, help="The name of the model to train.")
-    # parser.add_argument("--hf-repo", type=str, default=config.hf_repo, help="The name of the HuggingFace repo to push the model to.")
-    # parser.add_argument("--mlm", type=bool, default=config.mlm, help="Whether to use MLM or not for the training.")
-    # parser.add_argument('--lora-r', type=float, default=config.lora_r, help="The Lora parameter r, the number of heads.")
-    # parser.add_argument('--lora-alpha', type=float, default=config.lora_alpha, help="Lora parameter.")
-    # parser.add_argument('--lora-dropout', type=float, default=config.lora_dropout, help="Lora dropout.")
-    # parser.add_argument('--lora-bias', type=str, default=config.lora_bias, help="Lora bias.")
-    # parser.add_argument('--lora-task-type', type=str, default=config.lora_task_type, help="Lora task type.")
-    # parser.add_argument('--per-device-train-batch-size', type=int, default=config.per_device_train_batch_size, help="The batch size per device for the training.")
-    # parser.add_argument('--gradient-accumulation-steps', type=int, default=config.gradient_accumulation_steps, help="The number of gradient accumulation steps.")
-    # parser.add_argument('--warmup-steps', type=int, default=config.warmup_steps, help="The number of warmup steps.")
-    # parser.add_argument('--weight-decay', type=float, default=config.weight_decay, help="The weight decay.")
-    # parser.add_argument('--num-train-epochs', type=float, default=config.num_train_epochs, help="The number of training epochs.")
-    # parser.add_argument('--learning-rate', type=float, default=config.learning_rate, help="The learning rate.")
-    # parser.add_argument('--fp16', type=bool, default=config.fp16, help="Whether to use fp16 or not.")
-    # parser.add_argument('--logging-steps', type=int, default=config.logging_steps, help="The number of logging steps.")
-    # parser.add_argument('--output-dir', type=str, default=config.hf_repo, help="The output directory.")
-    # parser.add_argument('--overwrite-output_dir', type=bool, default=config.overwrite_output_dir, help="Whether to overwrite the output directory.")
-    # parser.add_argument('--save-strategy', type=str, default=config.save_strategy, help="The saving strategy.")
-    # parser.add_argument('--evaluation-strategy', type=str, default=config.evaluation_strategy, help="The evaluation strategy.")
-    # parser.add_argument('--push-to-hub', type=bool, default=config.push_to_hub, help="Whether to push the model to the HuggingFace Hub.")
-    # args = parser.parse_args()
+#     parser = argparse.ArgumentParser(description="Train an LLM with Lora.")
+#     parser.add_argument("--model-name", type=str, default=config.model_name, help="The name of the model to train.")
+#     parser.add_argument("--hf-repo", type=str, default=config.hf_repo, help="The name of the HuggingFace repo to push the model to.")
+#     parser.add_argument("--mlm", type=bool, default=config.mlm, help="Whether to use MLM or not for the training.")
+#     parser.add_argument('--lora-r', type=float, default=config.lora_r, help="The Lora parameter r, the number of heads.")
+#     parser.add_argument('--lora-alpha', type=float, default=config.lora_alpha, help="Lora parameter.")
+#     parser.add_argument('--lora-dropout', type=float, default=config.lora_dropout, help="Lora dropout.")
+#     parser.add_argument('--lora-bias', type=str, default=config.lora_bias, help="Lora bias.")
+#     parser.add_argument('--lora-task-type', type=str, default=config.lora_task_type, help="Lora task type.")
+#     parser.add_argument('--per-device-train-batch-size', type=int, default=config.per_device_train_batch_size, help="The batch size per device for the training.")
+#     parser.add_argument('--gradient-accumulation-steps', type=int, default=config.gradient_accumulation_steps, help="The number of gradient accumulation steps.")
+#     parser.add_argument('--warmup-steps', type=int, default=config.warmup_steps, help="The number of warmup steps.")
+#     parser.add_argument('--weight-decay', type=float, default=config.weight_decay, help="The weight decay.")
+#     parser.add_argument('--num-train-epochs', type=float, default=config.num_train_epochs, help="The number of training epochs.")
+#     parser.add_argument('--learning-rate', type=float, default=config.learning_rate, help="The learning rate.")
+#     parser.add_argument('--fp16', type=bool, default=config.fp16, help="Whether to use fp16 or not.")
+#     parser.add_argument('--logging-steps', type=int, default=config.logging_steps, help="The number of logging steps.")
+#     parser.add_argument('--output-dir', type=str, default=config.hf_repo, help="The output directory.")
+#     parser.add_argument('--overwrite-output_dir', type=bool, default=config.overwrite_output_dir, help="Whether to overwrite the output directory.")
+#     parser.add_argument('--save-strategy', type=str, default=config.save_strategy, help="The saving strategy.")
+#     parser.add_argument('--evaluation-strategy', type=str, default=config.evaluation_strategy, help="The evaluation strategy.")
+#     parser.add_argument('--push-to-hub', type=bool, default=config.push_to_hub, help="Whether to push the model to the HuggingFace Hub.")
+#     args = parser.parse_args()
 
 
     # lora_config = {
@@ -127,5 +135,6 @@ class LLMTolkien():
     #     hf_repo=args.hf_repo,
     #     lora_config=lora_config,
     #     trainer_config=trainer_config,
+    #     push_to_hub=args.push_to_hub,
     #     mlm=args.mlm
     # )
