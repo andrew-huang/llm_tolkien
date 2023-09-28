@@ -11,11 +11,13 @@ start_page = 45
 end_page = 1055
 extraction_path = REPO_DIR / "llm/data/extracted_text.jsonl"
 
+hf_book_repo = "moo"
+
 # Text processing
 min_length = 100
 
 # HF repo
-hf_repo = "eturok/mpt-7b-storywriter-tolkien"
+hf_repo = "Andalf/mpt-7b-storywriter-tolkien"
 
 # Dataset
 context_length = 2048
