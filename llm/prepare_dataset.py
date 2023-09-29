@@ -18,7 +18,7 @@ def prepare_dataset(dataset_path: Path, min_length: int, context_length: int,
                     model_name: str, hf_book_repo: str) -> None:
     """Prepare dataset for training and push it to the hub.
     """
-    tokenizer =  AutoTokenizer.from_pretrained(model_name)
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
     LOGGER.info(f'Start preparing dataset from {dataset_path}')
     text = preprocess_data(dataset_path=dataset_path, min_length=min_length, tokenizer=tokenizer)
     dataset = Dataset.from_dict({'text': [text]})

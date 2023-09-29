@@ -16,10 +16,9 @@ from pdfplumber.pdf import PDF
 logging.basicConfig(level=logging.INFO)
 LOGGER = logging.getLogger(__name__)
 
-
 def extract(url: str, start_page: int, end_page: int, 
             header_height: int, footer_height: int, 
-            extraction_path: Path) -> None:
+            extraction_path: Path, is_local: bool = False) -> None:
     """Extract text from a PDF url.
     Pages are exported in a jsonl file.
 
@@ -31,8 +30,13 @@ def extract(url: str, start_page: int, end_page: int,
         footer_height (int): footer height in pixels
     """
     LOGGER.info(f'Start extracting pages from {url}')
-    response = requests.get(url)
-    content = io.BytesIO(response.content)
+    if is_local:
+        fp = open(url, "rb")
+        content = io.BytesIO(fp.read())
+        print(content)
+    else:
+        response = requests.get(url)
+        content = io.BytesIO(response.content)
     with pdfplumber.open(content) as pdf:
         pages = extract_text_from_pdf(pdf, start_page, end_page, header_height, footer_height)
     LOGGER.info(f'Finished extracting texts from {url}')
@@ -52,6 +56,7 @@ def to_jsonl(pages: Iterator[Tuple[int, str]], path: Path) -> None:
 
 def extract_cropped_text_from_page(page: Page, header_height: int, footer_height: int) -> str:
     bbox = (0, header_height, page.width, footer_height) # Top-left corner, bottom-right corner
+    # text = page.crop(bbox=bbox).extract_text()
     text = page.crop(bbox=bbox).extract_text()
     return text
 

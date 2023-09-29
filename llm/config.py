@@ -17,7 +17,7 @@ hf_book_repo = "moo"
 min_length = 100
 
 # HF repo
-hf_repo = "Andalf/mpt-7b-storywriter-tolkien"
+hf_repo = "Andalf/mpt-7b-storywriter-test"
 
 # Dataset
 context_length = 2048
@@ -47,7 +47,7 @@ evaluation_strategy = "no"
 save_strategy = "no"
 push_to_hub = True
 report_to = 'wandb'
-run_name = 'lotr-llm'
+run_name = 'east-llm'
 
 # Data collator
 mlm =False
